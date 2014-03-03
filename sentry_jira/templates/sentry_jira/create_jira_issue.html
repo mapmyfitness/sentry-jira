@@ -9,16 +9,41 @@
     <div class="page-header">
         <h3>{{ title }}</h3>
     </div>
-    <p>This will create an issue in JIRA and create a link within the Sentry Event.</p>
+    <div>
+        <form><input type="radio" name="mode" value="create">Create      <input type="radio" name="mode" value="link">Link</form>
+    </div>
+    <div id="link_jira_ticket">
+          <p>This will Link to an exiting issue in JIRA and create a link within the Sentry Event.</p>
+
+    <br />
+        <form class="form-horizontal" action="" method="post" id="jira2_issue_form">
+        <input type="hidden" value="33" id="link_issue" name="link_issue" />
+        {% csrf_token %}
+
+           {{ from_link|crispy }}
+            <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{% trans "Link JIRA Issue" %}</button>
+                </div>
+
+    </form>
+
+    </div>
+
+ <div id="create_jira_ticket">
+     <p>This will create an issue in JIRA and create a link within the Sentry Event.</p>
+
     <br />
     <form class="form-horizontal" action="" method="post" id="jira_issue_form">
         <input type="hidden" value="0" id="changing_issuetype" name="changing_issuetype" />
         {% csrf_token %}
-        {{ form|crispy }}
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">{% trans "Create JIRA Issue" %}</button>
-        </div>
+
+            {{ form_create|crispy }}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{% trans "Create JIRA Issue" %}</button>
+                </div>
+
     </form>
+ </div>
 </div>
 {% endblock %}
 
@@ -67,6 +92,21 @@
                 $("#changing_issuetype").val("1");
                 $("#jira_issue_form").submit();
             });
+
+            $("input[name='mode']").filter("[value='create']").prop('checked', true);
+            $("#link_jira_ticket").hide();
+            $("#create_jira_ticket").show();
+            $("input[name='mode']").change(function() {
+
+            if ($("input[name='mode']:checked").val() == 'create'){
+                $("#link_jira_ticket").hide();
+                $("#create_jira_ticket").show();
+            }
+            else {
+                $("#create_jira_ticket").hide();
+                $("#link_jira_ticket").show();
+            }
+        });
         });
     </script>
 {% endblock %}

@@ -11,7 +11,7 @@ from sentry.plugins.bases.issue import IssuePlugin
 from sentry.utils import json
 
 from sentry_jira import VERSION as PLUGINVERSION
-from sentry_jira.forms import JIRAOptionsForm, JIRAIssueForm
+from sentry_jira.forms import JIRAOptionsForm, JIRAIssueForm, JIRAIssueLinkForm
 from sentry_jira.jira import JIRAClient
 
 
@@ -63,6 +63,19 @@ class JIRAPlugin(IssuePlugin):
     def get_new_issue_title(self):
         return "Create JIRA Issue"
 
+    def link_issue(self, group, form_data):
+        jira_client = self.get_jira_client(group.project)
+        issue_id = form_data['issue_id'].value()
+        issue_response = jira_client.get_issue(issue_id)
+        status_code = issue_response.status_code
+        if status_code in [200, 201]: # weirdly inconsistent.
+            return issue_response.json.get("key"), None
+        elif status_code == 404:
+            return None, 'issue is not found, or the user does not have permission to view it.'
+        else:
+            return None, 'unknown error: %s' % status_code
+
+
     def create_issue(self, request, group, form_data, **kwargs):
         """
         Form validation errors recognized server-side raise ValidationErrors,
@@ -70,7 +83,7 @@ class JIRAPlugin(IssuePlugin):
         the form.
         """
         jira_client = self.get_jira_client(group.project)
-        issue_response = jira_client.create_issue(form_data)
+        issue_response = None  #jira_client.create_issue(form_data) #debugging. never create an issue!
 
         if issue_response.status_code in [200, 201]: # weirdly inconsistent.
             return issue_response.json.get("key"), None
@@ -135,6 +148,21 @@ class JIRAPlugin(IssuePlugin):
             request.POST or None,
             initial=self.get_initial_form_data(request, group, event),
             ignored_fields=self.get_option("ignored_fields", group.project))
+
+        link_form = JIRAIssueLinkForm(
+            request.POST or None,
+            initial={'project_key': self.get_option('default_project', group.project),
+                     'project': group.project}
+
+        )
+
+        if request.POST and request.POST.get("link_issue") == "33":  # magic number
+            issue_id, error = self.link_issue(group=group, form_data=link_form)
+            if error:
+                link_form.errors.update(error)
+            if link_form.is_valid():
+                GroupMeta.objects.set_value(group, '%s:tid' % prefix, issue_id)
+            return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
         #######################################################################
         # to allow the form to be submitted, but ignored so that dynamic fields
         # can change if the issuetype is different
@@ -171,7 +199,8 @@ class JIRAPlugin(IssuePlugin):
                 form.errors[name] = form.error_class()
 
         context = {
-            'form': form,
+            'form_create': form,
+            'from_link': link_form,
             'title': self.get_new_issue_title(),
             }
 

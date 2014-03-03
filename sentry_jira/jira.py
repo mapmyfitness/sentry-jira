@@ -21,6 +21,7 @@ class JIRAClient(object):
     CREATE_URL = '/rest/api/2/issue'
     PRIORITIES_URL = '/rest/api/2/priority'
     VERSIONS_URL = '/rest/api/2/project/%s/versions'
+    ISSUE_URL = "/rest/api/2/issue/%s"
 
     def __init__(self, instance_uri, username, password):
         self.instance_url = instance_uri
@@ -38,6 +39,11 @@ class JIRAClient(object):
 
     def get_priorities(self):
         return self.get_cached(self.PRIORITIES_URL)
+
+    def get_issue(self, issue_id):
+        #import pdb; pdb.set_trace()
+        url = self.ISSUE_URL % issue_id
+        return self.make_request('get', url)
 
     def create_issue(self, raw_form_data):
         data = {'fields': raw_form_data}
