@@ -41,7 +41,6 @@ class JIRAClient(object):
         return self.get_cached(self.PRIORITIES_URL)
 
     def get_issue(self, issue_id):
-        #import pdb; pdb.set_trace()
         url = self.ISSUE_URL % issue_id
         return self.make_request('get', url)
 

@@ -93,20 +93,22 @@
                 $("#jira_issue_form").submit();
             });
 
-            $("input[name='mode']").filter("[value='create']").prop('checked', true);
-            $("#link_jira_ticket").hide();
-            $("#create_jira_ticket").show();
-            $("input[name='mode']").change(function() {
-
-            if ($("input[name='mode']:checked").val() == 'create'){
-                $("#link_jira_ticket").hide();
-                $("#create_jira_ticket").show();
-            }
-            else {
-                $("#create_jira_ticket").hide();
-                $("#link_jira_ticket").show();
-            }
-        });
+            $("input[name='mode']").filter("[value='{{default}}']").prop('checked', true);
+           	 
+	        function setSelection(selectedMode) {
+            	if (selectedMode === 'create'){
+                	$("#link_jira_ticket").hide();
+                	$("#create_jira_ticket").show();
+            	}
+            	else {
+                	$("#create_jira_ticket").hide();
+                	$("#link_jira_ticket").show();
+            	}
+	        }
+       	    setSelection('{{default}}');
+            $("input[name='mode']").change(function(){
+			    setSelection($("input[name='mode']:checked").val());
+	        });
         });
     </script>
 {% endblock %}

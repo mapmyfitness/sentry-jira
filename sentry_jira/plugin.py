@@ -61,7 +61,7 @@ class JIRAPlugin(IssuePlugin):
         return initial
 
     def get_new_issue_title(self):
-        return "Create JIRA Issue"
+        return "Create or Link JIRA Issue"
 
     def link_issue(self, group, form_data):
         jira_client = self.get_jira_client(group.project)
@@ -149,20 +149,21 @@ class JIRAPlugin(IssuePlugin):
             initial=self.get_initial_form_data(request, group, event),
             ignored_fields=self.get_option("ignored_fields", group.project))
 
-        link_form = JIRAIssueLinkForm(
-            request.POST or None,
-            initial={'project_key': self.get_option('default_project', group.project),
-                     'project': group.project}
+        link_form = JIRAIssueLinkForm(request.POST or None,
+            initial = {'project_key': self.get_option('default_project', group.project), 'project': group.project}
 
         )
-
+        context = {'form_create': form, 'from_link': link_form, 'title': self.get_new_issue_title()}
         if request.POST and request.POST.get("link_issue") == "33":  # magic number
             issue_id, error = self.link_issue(group=group, form_data=link_form)
             if error:
-                link_form.errors.update(error)
+                link_form.errors['issue_id'] = [error]
             if link_form.is_valid():
                 GroupMeta.objects.set_value(group, '%s:tid' % prefix, issue_id)
-            return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
+                return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
+            else:
+                context['default'] = 'link'
+                return self.render(self.create_issue_template, context)
         #######################################################################
         # to allow the form to be submitted, but ignored so that dynamic fields
         # can change if the issuetype is different
@@ -198,11 +199,7 @@ class JIRAPlugin(IssuePlugin):
             for name, field in form.fields.items():
                 form.errors[name] = form.error_class()
 
-        context = {
-            'form_create': form,
-            'from_link': link_form,
-            'title': self.get_new_issue_title(),
-            }
+        context['default'] = 'create'
 
         return self.render(self.create_issue_template, context)
 
