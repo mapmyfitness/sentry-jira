@@ -154,7 +154,7 @@ class JIRAPlugin(IssuePlugin):
 
         )
         context = {'form_create': form, 'from_link': link_form, 'title': self.get_new_issue_title()}
-        if request.POST and request.POST.get("link_issue") == "33":  # magic number
+        if request.POST and request.POST.get("link_issue") == "link_jira_issue":
             issue_id, error = self.link_issue(group=group, form_data=link_form)
             if error:
                 link_form.errors['issue_id'] = [error]

@@ -17,7 +17,7 @@
 
     <br />
         <form class="form-horizontal" action="" method="post" id="jira2_issue_form">
-        <input type="hidden" value="33" id="link_issue" name="link_issue" />
+        <input type="hidden" value="link_jira_issue" id="link_issue" name="link_issue" />
         {% csrf_token %}
 
            {{ from_link|crispy }}
