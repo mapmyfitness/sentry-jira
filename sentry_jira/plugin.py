@@ -83,7 +83,7 @@ class JIRAPlugin(IssuePlugin):
         the form.
         """
         jira_client = self.get_jira_client(group.project)
-        issue_response = None  #jira_client.create_issue(form_data) #debugging. never create an issue!
+        issue_response = jira_client.create_issue(form_data) #debugging. never create an issue!
 
         if issue_response.status_code in [200, 201]: # weirdly inconsistent.
             return issue_response.json.get("key"), None
