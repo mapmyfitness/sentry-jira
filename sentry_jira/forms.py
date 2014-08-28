@@ -351,3 +351,9 @@ class JIRAIssueForm(forms.Form):
                 fkwargs["widget"] = forms.Textarea(attrs={'class': 'span6'})
 
         return fieldtype(**fkwargs)
+
+
+class JIRAIssueLinkForm(forms.Form):
+    project_key = forms.CharField(widget=forms.HiddenInput())
+    project = forms.CharField(widget=forms.HiddenInput())
+    issue_id = forms.CharField(label=_("Issue ID"), widget=forms.TextInput(attrs={'class': 'span6'}))
