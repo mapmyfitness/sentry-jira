@@ -56,6 +56,11 @@ class JIRAPlugin(IssuePlugin):
             'summary': self._get_group_title(request, group, event),
             'description': self._get_group_description(request, group, event),
         }
+        
+        interface = event.interfaces.get('sentry.interfaces.Exception')
+
+        if interface:
+            initial['description'] += "\n{code}%s{code}" % interface.get_stacktrace(event, system_frames=False, max_frames=settings.SENTRY_MAX_STACKTRACE_FRAMES)
 
         default_priority = self.get_option('default_priority', group.project)
         if default_priority:
