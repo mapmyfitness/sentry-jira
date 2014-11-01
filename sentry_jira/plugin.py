@@ -36,7 +36,8 @@ class JIRAPlugin(IssuePlugin):
         ("Documentation", "http://sentry-jira.readthedocs.org/en/latest/"),
         ("README", "https://raw.github.com/thurloat/sentry-jira/master/README.rst"),
         ("Bug Tracker", "https://github.com/thurloat/sentry-jira/issues"),
-        ("Source", "http://github.com/thurloat/sentry-jira"),
+        ("Original Source", "http://github.com/thurloat/sentry-jira"),
+        ("Source", "http://github.com/beeftornado/sentry-jira"),
     ]
 
     def is_configured(self, request, project, **kwargs):
