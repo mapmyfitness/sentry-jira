@@ -36,7 +36,8 @@ class JIRAPlugin(IssuePlugin):
         ("Documentation", "http://sentry-jira.readthedocs.org/en/latest/"),
         ("README", "https://raw.github.com/thurloat/sentry-jira/master/README.rst"),
         ("Bug Tracker", "https://github.com/thurloat/sentry-jira/issues"),
-        ("Source", "http://github.com/thurloat/sentry-jira"),
+        ("Original Source", "http://github.com/thurloat/sentry-jira"),
+        ("Source", "http://github.com/beeftornado/sentry-jira"),
     ]
 
     def is_configured(self, request, project, **kwargs):
@@ -55,6 +56,11 @@ class JIRAPlugin(IssuePlugin):
             'summary': self._get_group_title(request, group, event),
             'description': self._get_group_description(request, group, event),
         }
+        
+        interface = event.interfaces.get('sentry.interfaces.Exception')
+
+        if interface:
+            initial['description'] += "\n{code}%s{code}" % interface.get_stacktrace(event, system_frames=False, max_frames=settings.SENTRY_MAX_STACKTRACE_FRAMES)
 
         default_priority = self.get_option('default_priority', group.project)
         if default_priority:
@@ -118,6 +124,7 @@ class JIRAPlugin(IssuePlugin):
         else:
             action_list.append(('View JIRA: %s' % issue_key, self.get_issue_url(group, issue_key)))
             action_list.append(('Update Issue Key', self.get_url(group)))
+            action_list.append(('Not %s?' % issue_key, '%s?unlink=1' % self.get_url(group)))
         return action_list
 
     def view(self, request, group, **kwargs):
@@ -148,7 +155,14 @@ class JIRAPlugin(IssuePlugin):
                 })
 
         issue_key = GroupMeta.objects.get_value(group, '%s:tid' % self.get_conf_key(), None)
-        if issue_key:
+        unlink = True if request.GET.get("unlink") else False
+        
+        # Does user want to disassociate error from ticket?
+        if issue_key and unlink:
+            self.remove_issue(group)
+            return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
+        # User just wants to update issue key (which I have no idea what it means)
+        elif issue_key:
             self.update_issue_key(group)
             return self.redirect(reverse('sentry-group', args=[group.team.slug, group.project_id, group.pk]))
 
@@ -355,6 +369,9 @@ class JIRAPlugin(IssuePlugin):
             issue_key = gm.value
             resp = client.get_issue(issue_key)
             gm.update(value=resp.json['key'])
+    
+    def remove_issue(self, group):
+        GroupMeta.objects.unset_value(group, '%s:tid' % self.get_conf_key())
 
 class JSONResponse(Response):
     """

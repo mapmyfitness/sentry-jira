@@ -149,7 +149,8 @@ class JIRAOptionsForm(forms.Form):
 CUSTOM_FIELD_TYPES = {
     "select": "com.atlassian.jira.plugin.system.customfieldtypes:select",
     "textarea": "com.atlassian.jira.plugin.system.customfieldtypes:textarea",
-    "multiuserpicker": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker"
+    "multiuserpicker": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+    "number": "com.atlassian.jira.plugin.system.customfieldtypes:float"
 }
 
 
@@ -291,6 +292,8 @@ class JIRAIssueForm(forms.Form):
                         v = [{"id": vx} for vx in v]
                     elif schema.get("custom") == CUSTOM_FIELD_TYPES.get("textarea"):
                         v = v
+                    elif schema.get("custom") == CUSTOM_FIELD_TYPES.get("number"):
+                        v = float(v)
                     elif (schema.get("type") != "string"
                             or schema.get("item") != "string"
                             or schema.get("custom") == CUSTOM_FIELD_TYPES.get("select")):
