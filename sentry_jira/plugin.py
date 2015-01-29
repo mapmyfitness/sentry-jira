@@ -289,14 +289,12 @@ class JIRAPlugin(IssuePlugin):
         return issue_types
 
     def should_create(self, group, event, is_new):
-
-        if GroupMeta.objects.get_value(group, '%s:tid' % self.get_conf_key(), None):
-            return False
-
         auto_create = self.get_option('auto_create', group.project)
 
         if auto_create and is_new:
             return True
+        else:
+            return False
 
     def post_process(self, group, event, is_new, is_sample, **kwargs):
         if self.should_create(group, event, is_new):
