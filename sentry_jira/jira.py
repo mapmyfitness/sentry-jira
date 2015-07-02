@@ -1,5 +1,8 @@
+from __future__ import absolute_import
+
 import logging
-import requests
+
+from sentry.http import build_session
 from sentry.utils import json
 from sentry.utils.cache import cache
 from simplejson.decoder import JSONDecodeError
@@ -67,18 +70,19 @@ class JIRAClient(object):
         if url[:4] != "http":
             url = self.instance_url + url
         auth = self.username, self.password
-        headers = {'content-type': 'application/json'}
+        session = build_session()
         try:
             if method == 'get':
-                r = requests.get(url, params=payload, auth=auth, headers=headers,
-                                 verify=False, timeout=self.HTTP_TIMEOUT)
+                r = session.get(
+                    url, params=payload, auth=auth,
+                    verify=False, timeout=self.HTTP_TIMEOUT)
             else:
-                r = requests.post(url, data=json.dumps(payload), auth=auth,
-                                  headers=headers, verify=False,
-                                  timeout=self.HTTP_TIMEOUT)
+                r = session.post(
+                    url, json=payload, auth=auth,
+                    verify=False, timeout=self.HTTP_TIMEOUT)
             return JIRAResponse(r.text, r.status_code)
         except Exception, e:
-            logging.error('Error in request to %s: %s' % (url, e.message))
+            logging.error('Error in request to %s: %s', url, e.message)
             return JIRAResponse("There was a problem reaching %s: %s" % (url, e.message), 500)
 
     def get_cached(self, full_url):
