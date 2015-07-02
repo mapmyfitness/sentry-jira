@@ -315,7 +315,8 @@ class JIRAIssueForm(forms.Form):
 
         return very_clean
 
-    def build_dynamic_field(self, field_meta):
+    @staticmethod
+    def build_dynamic_field(field_meta):
         """
         Builds a field based on JIRA's meta field information
         """

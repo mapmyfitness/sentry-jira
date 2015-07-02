@@ -40,7 +40,7 @@ class JIRAPlugin(IssuePlugin):
         ("Source", "http://github.com/beeftornado/sentry-jira"),
     ]
 
-    def is_configured(self, request, project, **kwargs):
+    def is_configured(self, project, **kwargs):
         if not self.get_option('default_project', project):
             return False
         return True
@@ -73,7 +73,8 @@ class JIRAPlugin(IssuePlugin):
 
         return initial
 
-    def get_new_issue_title(self):
+    @staticmethod
+    def get_new_issue_title():
         return "Create or Link JIRA Issue"
 
     def link_issue(self, group, form_data):
@@ -289,7 +290,7 @@ class JIRAPlugin(IssuePlugin):
     def handle_issue_type_autocomplete(self, request, group):
         project = request.GET("project")
         jira_client = self.get_jira_client(group.project)
-        meta = jira_client.get_meta_for_project(project)
+        meta = jira_client.get_create_meta_for_project(project)
 
         issue_types = []
         for issue_type in meta.json:
@@ -378,7 +379,9 @@ class JSONResponse(Response):
     Hack through the builtin response reliance on plugin.render for responses
     by making a plain response out of a subclass of the expected type.
     """
-    def __init__(self, object):
+
+    def __init__(self, object, template=None):
+        super(JSONResponse, self).__init__(template)
         self.object = object
 
     def respond(self, *args, **kwargs):
